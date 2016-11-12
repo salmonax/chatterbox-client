@@ -12,7 +12,7 @@ var message2 = {
 class App {
   constructor() {
     this.server = 'https://api.parse.com/1/classes/messages';
-    this.username = window.location.search.split('=')[1];
+    this.username = window.location.search.split('=').pop();
         // console.log(this.username);
   }
 
@@ -118,7 +118,6 @@ $(document).ready(function() {
       }
       app.renderMessage(message);
     });
-    console.log(rooms);
     Object.keys(rooms).forEach(function(room) {
       app.renderRoom(room);
     });
@@ -128,11 +127,23 @@ $(document).ready(function() {
     console.log('clicked');
     app.handleUsernameClick();
   });
-  $('#send .submit').submit(function(event) {
+  $('#send').on('submit', function(event) {
+    console.log(window.location.search);
+    // return false;
     event.preventDefault();
-    console.log(this);  
-    app.handleSubmit();
-    return false;
+    // console.log('submited');
+    // console.log(event.target);
+    console.log($(this).find('.text').val());  
+    console.log($(this).find('#roomSelect').val()); 
+    console.log(app.username);
+    var message = {
+      username: app.username,
+      text: $(this).find('.text').val(),
+      roomname: $(this).find('#roomSelect').val()
+    };
+    console.log('pass message to app.send');
+    app.send(message);
+    // return false;
   });
 });
 
