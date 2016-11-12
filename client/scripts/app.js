@@ -17,9 +17,36 @@ class App {
   }
 
   init() {
+    this.fetch(data => {
+      var rooms = {};
+      data.results.forEach(message => { 
+        if (!!message.roomname) { 
+          rooms[message.roomname.trim()] = true; 
+        }
+        this.renderMessage(message);
+      });
+      Object.keys(rooms).forEach(room => {
+        this.renderRoom(room);
+      });
+
+    });
   }
 
-  send(message) {
+  refresh() {
+    var selectedRoom = $('#roomSelect').val();
+    $('#chats').empty();
+    this.fetch(data => {
+      data.results.forEach(message => { 
+        if (selectedRoom === 'allRooms' ||
+            !!message.roomname && 
+            message.roomname.trim() === selectedRoom) { 
+          this.renderMessage(message); 
+        }
+      });
+    });
+  }
+
+  send(message,cb) {
     $.ajax({
       // This is the url you should use to communicate with the parse API server.
       url: 'https://api.parse.com/1/classes/messages',
@@ -27,15 +54,8 @@ class App {
       data: JSON.stringify(message),
       contentType: 'application/json',
       success: function (data) {
-        // data.results.forEach(function(result) {
-        //   console.log(result.text);
-        //   console.log(result.createdAt);
-        //   console.log(result.roomname);
-        //   console.log(result.username);
-
-        // });
+        cb(data);
         console.log('chatterbox: Message sent');
-        // console.log (data);
       },
       error: function (data) {
         // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
@@ -54,17 +74,6 @@ class App {
       success: function(data) {
         cb(data);
       },
-      // function (data) {
-      //   data.results.forEach(function(result) {
-      //     console.log(result.text);
-      //     console.log(result.createdAt);
-      //     console.log(result.roomname);
-      //     console.log(result.username);
-
-      //   });
-        // console.log('chatterbox: Message sent');
-        // console.log (data);
-      // },
       error: function (data) {
         // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
         console.error('chatterbox: Failed to send message', data);
@@ -95,8 +104,10 @@ class App {
   handleUsernameClick() {
   }
 
-  handleSubmit() {
-
+  handleSubmit(message) {
+    this.send(message, () => {
+      this.refresh();
+    });
   }
 
   _escapeHtml(str) {
@@ -109,41 +120,39 @@ class App {
 var app = new App();
 
 $(document).ready(function() {
-  app.fetch(function (data) {
-    // console.log(data.results);
-    var rooms = {};
-    data.results.forEach(message => { 
-      if (!!message.roomname) { 
-        rooms[message.roomname.trim()] = true; 
-      }
-      app.renderMessage(message);
-    });
-    Object.keys(rooms).forEach(function(room) {
-      app.renderRoom(room);
-    });
-
-  });
+  app.init();
   $('#chats').on('click', '.username', function(event) {
-    console.log('clicked');
+
     app.handleUsernameClick();
   });
   $('#send').on('submit', function(event) {
-    console.log(window.location.search);
     // return false;
     event.preventDefault();
-    // console.log('submited');
-    // console.log(event.target);
-    console.log($(this).find('.text').val());  
-    console.log($(this).find('#roomSelect').val()); 
-    console.log(app.username);
-    var message = {
+    var roomSelected = $(this).find('#roomSelect').val();
+    var message = { 
       username: app.username,
       text: $(this).find('.text').val(),
-      roomname: $(this).find('#roomSelect').val()
+      roomname: (roomSelected === 'allRooms') ? 'lobby' : roomSelected
     };
-    console.log('pass message to app.send');
-    app.send(message);
+    app.handleSubmit(message);
     // return false;
+  });
+  $('#send').on('change', '#roomSelect', () => {
+    var selectedRoom = $('#roomSelect').val();
+    if (selectedRoom === 'createRoom') {
+      selectedRoom = prompt('Enter a room to create:');
+      var message = { 
+        username: app.username,
+        text: `Welcome to my magic world of ${selectedRoom}!`,
+        roomname: selectedRoom
+      };
+      app.send(message, () => {
+        app.init();
+      });
+      console.log(selectedRoom)
+    } else {
+      app.refresh();
+    }
   });
 });
 
