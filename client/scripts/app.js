@@ -13,24 +13,28 @@ class App {
   constructor() {
     this.server = 'https://api.parse.com/1/classes/messages';
     this.username = window.location.search.split('=').pop();
+    this.rooms = {};
+    this.friends = {};
         // console.log(this.username);
   }
 
   init() {
     this.fetch(data => {
-      var rooms = {};
+      // var rooms = {};
       data.results.forEach(message => { 
         if (!!message.roomname) { 
-          rooms[message.roomname.trim()] = true; 
+          this.rooms[message.roomname.trim()] = true; 
         }
         this.renderMessage(message);
       });
-      Object.keys(rooms).forEach(room => {
+      
+      Object.keys(this.rooms).forEach(room => {
         this.renderRoom(room);
       });
 
     });
   }
+
 
   refresh() {
     var selectedRoom = $('#roomSelect').val();
@@ -46,7 +50,7 @@ class App {
     });
   }
 
-  send(message,cb) {
+  send(message, cb) {
     $.ajax({
       // This is the url you should use to communicate with the parse API server.
       url: 'https://api.parse.com/1/classes/messages',
@@ -69,7 +73,10 @@ class App {
       // This is the url you should use to communicate with the parse API server.
       url: 'https://api.parse.com/1/classes/messages',
       type: 'GET',
-      data: "order=-createdAt",
+      data: { 
+        order: "-createdAt",
+        // where: { roomname: "lobby"}
+       },
       contentType: 'application/json',
       success: function(data) {
         cb(data);
@@ -88,7 +95,7 @@ class App {
   renderMessage(message) {
     var $messageDiv = $('<div class = "message"></div>');
     $messageDiv.append('<span class = "roomname">From ' + this._escapeHtml(message.roomname) + ': </span>');
-    $messageDiv.append('<span class = "username">' + this._escapeHtml(message.username) + ': </span>');
+    $messageDiv.append(`<span class = "username ${this._convertToClassName(message.username)}">${this._escapeHtml(message.username)}</span>: `);
 
     $messageDiv.append('<span class = "text">' + this._escapeHtml(message.text) + '</span>');
     $messageDiv.append('<span class = "text"> @' + this._escapeHtml(message.createdAt) + '</span>');
@@ -101,7 +108,11 @@ class App {
     $('#roomSelect').append(`<option class="${text}" value="${text}">${text}</option>`);
   }
 
-  handleUsernameClick() {
+  handleUsernameClick($this) {
+    var className = this._convertToClassName($this.text());
+    this.friends[className] = true;
+    console.log(this.friends);
+    $('.' + className).closest('.message').addClass('friend');
   }
 
   handleSubmit(message) {
@@ -115,7 +126,14 @@ class App {
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
   }
+
+  _convertToClassName(str = 'undefined') {
+    return str.replace(/[^\w-_]/g, '').slice(0, 20);
+  }
+
+
 }
+
 
 var app = new App();
 
@@ -123,7 +141,7 @@ $(document).ready(function() {
   app.init();
   $('#chats').on('click', '.username', function(event) {
 
-    app.handleUsernameClick();
+    app.handleUsernameClick($(this));
   });
   $('#send').on('submit', function(event) {
     // return false;
@@ -141,15 +159,26 @@ $(document).ready(function() {
     var selectedRoom = $('#roomSelect').val();
     if (selectedRoom === 'createRoom') {
       selectedRoom = prompt('Enter a room to create:');
-      var message = { 
-        username: app.username,
-        text: `Welcome to my magic world of ${selectedRoom}!`,
-        roomname: selectedRoom
-      };
-      app.send(message, () => {
-        app.init();
-      });
-      console.log(selectedRoom)
+      if (selectedRoom !== null) {
+        selectedRoom = selectedRoom.trim();
+        var message = { 
+          username: app.username,
+          text: `Welcome to my magic world of ${selectedRoom}!`,
+          roomname: selectedRoom
+        };
+        if (app.rooms[selectedRoom] !== undefined ) {
+          alert('The room already exist, you are going to this existed room');
+          $('#roomSelect').val(selectedRoom);
+          app.refresh();
+        } else {
+          app.send(message, () => {
+            console.log(selectedRoom);
+            app.renderRoom(selectedRoom);
+            $('#roomSelect').val(selectedRoom);
+            app.refresh();
+          });        
+        }
+      }
     } else {
       app.refresh();
     }

@@ -85,7 +85,7 @@ form input[type=text] {
 
 .friend {
     color: #fff;
-    background-color: #0090da;
+/*    background-color: #0090da;*/
 }
 .message {
     background-color: grey;
@@ -98,3 +98,17 @@ form input[type=text] {
     height: 50px;
     width: 50px;
 }
+.createRoom {
+    background-color: red;
+}
+select option:first-child{
+  color: green;
+}
+.username:hover {
+    color: chartreuse;
+    cursor: pointer;
+}
+.friend {
+    font-weight: bold;
+}
+
