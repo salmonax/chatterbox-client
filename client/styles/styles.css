@@ -87,4 +87,10 @@ form input[type=text] {
     color: #fff;
     background-color: #0090da;
 }
-
+.message {
+    background-color: grey;
+    border: 1px solid red;
+    margin-top: 5px;
+    padding: 2px;
+    border-radius: 2px;
+}
