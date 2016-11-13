@@ -126,6 +126,25 @@ describe('chatterbox', function() {
 
         app.handleSubmit.restore();
       });
+
+      // it('should refresh the messages if an existing room is selected', function () {
+      //   console.log($('#roomSelect'));
+      //   sinon.spy(app, 'handleRoomChange');
+
+      //   app.init();
+
+      //   app.renderRoom('New');
+      //   $('#roomSelect').val('New').trigger('change');  
+      //   // app.refresh();
+
+      //   expect(app.handleRoomChange.called).to.be.true;
+
+      //   app.handleRoomChange.restore();
+      // });
+      xit('should create a new room if a Create New Room is selected');
     });
+
+
+
   });
 });

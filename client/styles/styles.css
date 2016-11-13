@@ -111,4 +111,7 @@ select option:first-child{
 .friend {
     font-weight: bold;
 }
+#roomSelect {
+    max-width: 150px;
+}
 
